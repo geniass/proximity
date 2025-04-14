@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:proximity/date_utils.dart';
 
 class TripFormSheet extends StatefulWidget {
   final String? initialName;
@@ -71,9 +71,6 @@ class _TripFormSheetState extends State<TripFormSheet> {
     }
   }
 
-  String _formatDate(DateTime date) {
-    return DateFormat('E, d MMMM yyyy').format(date);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -199,7 +196,7 @@ class _TripFormSheetState extends State<TripFormSheet> {
                         const SizedBox(height: 4),
                         Text(
                           _selectedStartDate != null 
-                              ? _formatDate(_selectedStartDate!)
+                              ? formatDate(_selectedStartDate!)
                               : 'Select a date',
                           style: TextStyle(
                             color: Colors.purple[800],
@@ -238,7 +235,7 @@ class _TripFormSheetState extends State<TripFormSheet> {
                         const SizedBox(height: 4),
                         Text(
                           _selectedEndDate != null 
-                              ? _formatDate(_selectedEndDate!)
+                              ? formatDate(_selectedEndDate!)
                               : 'Select a date',
                           style: TextStyle(
                             color: Colors.purple[800],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:proximity/date_utils.dart';
 import 'trip_form_sheet.dart';
 import 'package:intl/intl.dart';
 
@@ -164,8 +165,6 @@ class _TripsScreenState extends State<TripsScreen> {
               padding: const EdgeInsets.only(bottom: 16.0),
               child: TripCard(
                 destination: trip['destination'],
-                startDate: trip['startDate'],
-                endDate: trip['endDate'],
                 avatarLetter: trip['avatarLetter'],
                 startDateTime: trip['startDateTime'],
                 endDateTime: trip['endDateTime'],
@@ -191,8 +190,6 @@ class _TripsScreenState extends State<TripsScreen> {
 
 class TripCard extends StatelessWidget {
   final String destination;
-  final String startDate;
-  final String endDate;
   final String avatarLetter;
   final DateTime? startDateTime;
   final DateTime? endDateTime;
@@ -202,8 +199,6 @@ class TripCard extends StatelessWidget {
   const TripCard({
     super.key,
     required this.destination,
-    required this.startDate,
-    required this.endDate,
     required this.avatarLetter,
     this.startDateTime,
     this.endDateTime,
@@ -286,7 +281,7 @@ class TripCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      endDate.isEmpty ? startDate : '$startDate - $endDate',
+                      startDateTime == null || endDateTime == null ? 'No Start/End' : '${formatDate(startDateTime!)} - ${formatDate(endDateTime!)}' ,
                       style: const TextStyle(
                         fontSize: 14,
                         color: Colors.black54,
