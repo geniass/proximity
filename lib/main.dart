@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:proximity/date_utils.dart';
+import 'package:proximity/places_of_interest_screen.dart';
 import 'trip_form_sheet.dart';
-import 'package:intl/intl.dart';
 
 void main() {
   runApp(const ProximityApp());
@@ -169,8 +169,22 @@ class _TripsScreenState extends State<TripsScreen> {
                 startDateTime: trip['startDateTime'],
                 endDateTime: trip['endDateTime'],
                 onTap: () {
-                  // Handle the main tap action here (will be used for something else)
-                  print('Trip tapped: ${trip['destination']}');
+                  // Navigate to the places of interest screen when tapping on a trip
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PlacesOfInterestScreen(
+                        tripName: trip['destination'],
+                        initialPlaces: trip['places'] ?? [],
+                      ),
+                    ),
+                  ).then((updatedPlaces) {
+                    if (updatedPlaces != null) {
+                      setState(() {
+                        trip['places'] = updatedPlaces;
+                      });
+                    }
+                  });
                 },
                 onEdit: () => _showEditTripSheet(index),
               ),
