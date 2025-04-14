@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'trip_form_sheet.dart';
+import 'package:intl/intl.dart';
 
 void main() {
   runApp(const ProximityApp());
@@ -16,7 +17,7 @@ class ProximityApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.blue,
-          background: const Color(0xFFECF5F5),
+          surface: const Color(0xFFECF5F5),
         ),
       ),
       home: const TripsScreen(),
@@ -39,6 +40,8 @@ class _TripsScreenState extends State<TripsScreen> {
       'startDate': '29 July',
       'endDate': '13 August',
       'avatarLetter': 'T',
+      'startDateTime': DateTime(2025, 7, 29),
+      'endDateTime': DateTime(2025, 8, 13),
     }
   ];
 
@@ -63,9 +66,15 @@ class _TripsScreenState extends State<TripsScreen> {
         setState(() {
           _trips.add({
             'destination': result['name'],
-            'startDate': result['startDate'] != null ? '${result['startDate'].day} ${_getMonthName(result['startDate'].month)}' : 'No date',
-            'endDate': result['endDate'] != null ? '${result['endDate'].day} ${_getMonthName(result['endDate'].month)}' : '',
+            'startDate': result['startDate'] != null
+                ? '${result['startDate'].day} ${_getMonthName(result['startDate'].month)}'
+                : 'No date',
+            'endDate': result['endDate'] != null
+                ? '${result['endDate'].day} ${_getMonthName(result['endDate'].month)}'
+                : '',
             'avatarLetter': result['name'][0].toUpperCase(),
+            'startDateTime': result['startDate'],
+            'endDateTime': result['endDate'],
           });
         });
       }
@@ -73,7 +82,20 @@ class _TripsScreenState extends State<TripsScreen> {
   }
 
   String _getMonthName(int month) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
     return months[month - 1];
   }
 
@@ -125,6 +147,8 @@ class _TripsScreenState extends State<TripsScreen> {
                 startDate: trip['startDate'],
                 endDate: trip['endDate'],
                 avatarLetter: trip['avatarLetter'],
+                startDateTime: trip['startDateTime'],
+                endDateTime: trip['endDateTime'],
               ),
             );
           },
@@ -145,6 +169,8 @@ class TripCard extends StatelessWidget {
   final String startDate;
   final String endDate;
   final String avatarLetter;
+  final DateTime? startDateTime;
+  final DateTime? endDateTime;
 
   const TripCard({
     super.key,
@@ -152,10 +178,45 @@ class TripCard extends StatelessWidget {
     required this.startDate,
     required this.endDate,
     required this.avatarLetter,
+    this.startDateTime,
+    this.endDateTime,
   });
+
+  double calculateProgress() {
+    // Today's date
+    final today = DateTime.now();
+
+    // If no dates are set, return 0
+    if (startDateTime == null || endDateTime == null) {
+      return 0.0;
+    }
+
+    // If the trip hasn't started yet
+    if (today.isBefore(startDateTime!)) {
+      return 0.0;
+    }
+
+    // If the trip is already over
+    if (today.isAfter(endDateTime!)) {
+      return 1.0;
+    }
+
+    // Calculate the total trip duration in days
+    final totalDuration = endDateTime!.difference(startDateTime!).inDays;
+    if (totalDuration <= 0) return 0.0;
+
+    // Calculate days elapsed since start
+    final elapsedDuration = today.difference(startDateTime!).inDays;
+
+    // Calculate and return progress as a value between 0.0 and 1.0
+    return elapsedDuration / totalDuration;
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Calculate trip progress
+    final progress = calculateProgress();
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -203,15 +264,28 @@ class TripCard extends StatelessWidget {
                 ],
               ),
             ),
-            // Right loading indicator
+            // Right progress indicator
             SizedBox(
               height: 40,
               width: 40,
-              child: CircularProgressIndicator(
-                value: 0.65,
-                strokeWidth: 5,
-                color: Colors.indigo.shade700,
-                backgroundColor: Colors.grey.shade300,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    value: progress,
+                    strokeWidth: 5,
+                    color: Colors.indigo.shade700,
+                    backgroundColor: Colors.grey.shade300,
+                  ),
+                  Text(
+                    '${(progress * 100).toInt()}%',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.indigo.shade700,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
