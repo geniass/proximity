@@ -45,7 +45,7 @@ class _TripsScreenState extends State<TripsScreen> {
     }
   ];
 
-  void _showAddTripSheet() {
+  void _showTripSheet({Map<String, dynamic>? tripData, int? index}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -57,14 +57,18 @@ class _TripsScreenState extends State<TripsScreen> {
         builder: (_, scrollController) {
           return SingleChildScrollView(
             controller: scrollController,
-            child: const TripFormSheet(),
+            child: TripFormSheet(
+              initialName: tripData?['destination'],
+              initialStartDate: tripData?['startDateTime'],
+              initialEndDate: tripData?['endDateTime'],
+            ),
           );
         },
       ),
     ).then((result) {
       if (result != null && result['name'] != null && result['name'].isNotEmpty) {
         setState(() {
-          _trips.add({
+          final Map<String, dynamic> updatedTrip = {
             'destination': result['name'],
             'startDate': result['startDate'] != null
                 ? '${result['startDate'].day} ${_getMonthName(result['startDate'].month)}'
@@ -75,10 +79,26 @@ class _TripsScreenState extends State<TripsScreen> {
             'avatarLetter': result['name'][0].toUpperCase(),
             'startDateTime': result['startDate'],
             'endDateTime': result['endDate'],
-          });
+          };
+
+          if (index != null) {
+            // Update existing trip
+            _trips[index] = updatedTrip;
+          } else {
+            // Add new trip
+            _trips.add(updatedTrip);
+          }
         });
       }
     });
+  }
+
+  void _showAddTripSheet() {
+    _showTripSheet();
+  }
+
+  void _showEditTripSheet(int index) {
+    _showTripSheet(tripData: _trips[index], index: index);
   }
 
   String _getMonthName(int month) {
@@ -149,6 +169,11 @@ class _TripsScreenState extends State<TripsScreen> {
                 avatarLetter: trip['avatarLetter'],
                 startDateTime: trip['startDateTime'],
                 endDateTime: trip['endDateTime'],
+                onTap: () {
+                  // Handle the main tap action here (will be used for something else)
+                  print('Trip tapped: ${trip['destination']}');
+                },
+                onEdit: () => _showEditTripSheet(index),
               ),
             );
           },
@@ -171,6 +196,8 @@ class TripCard extends StatelessWidget {
   final String avatarLetter;
   final DateTime? startDateTime;
   final DateTime? endDateTime;
+  final VoidCallback? onTap;
+  final VoidCallback? onEdit;
 
   const TripCard({
     super.key,
@@ -180,6 +207,8 @@ class TripCard extends StatelessWidget {
     required this.avatarLetter,
     this.startDateTime,
     this.endDateTime,
+    this.onTap,
+    this.onEdit,
   });
 
   double calculateProgress() {
@@ -217,78 +246,88 @@ class TripCard extends StatelessWidget {
     // Calculate trip progress
     final progress = calculateProgress();
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      color: Colors.white,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-        child: Row(
-          children: [
-            // Left avatar with initial letter
-            CircleAvatar(
-              radius: 25,
-              backgroundColor: Colors.blue.shade100,
-              child: Text(
-                avatarLetter,
-                style: TextStyle(
-                  fontSize: 24,
-                  color: Colors.indigo.shade700,
-                  fontWeight: FontWeight.bold,
+    return GestureDetector(
+      onTap: onTap,
+      child: Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        color: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+          child: Row(
+            children: [
+              // Left avatar with initial letter
+              CircleAvatar(
+                radius: 25,
+                backgroundColor: Colors.blue.shade100,
+                child: Text(
+                  avatarLetter,
+                  style: TextStyle(
+                    fontSize: 24,
+                    color: Colors.indigo.shade700,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 16),
-            // Middle section with trip details
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    destination,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+              const SizedBox(width: 16),
+              // Middle section with trip details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      destination,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    endDate.isEmpty ? startDate : '$startDate - $endDate',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.black54,
+                    const SizedBox(height: 4),
+                    Text(
+                      endDate.isEmpty ? startDate : '$startDate - $endDate',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black54,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            // Right progress indicator
-            SizedBox(
-              height: 40,
-              width: 40,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  CircularProgressIndicator(
-                    value: progress,
-                    strokeWidth: 5,
-                    color: Colors.indigo.shade700,
-                    backgroundColor: Colors.grey.shade300,
-                  ),
-                  Text(
-                    '${(progress * 100).toInt()}%',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+              // Edit icon
+              if (onEdit != null)
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined, size: 20),
+                  color: Colors.grey[600],
+                  onPressed: onEdit,
+                ),
+              // Right progress indicator
+              SizedBox(
+                height: 40,
+                width: 40,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: progress,
+                      strokeWidth: 5,
                       color: Colors.indigo.shade700,
+                      backgroundColor: Colors.grey.shade300,
                     ),
-                  ),
-                ],
+                    Text(
+                      '${(progress * 100).toInt()}%',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.indigo.shade700,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
