@@ -43,9 +43,9 @@ class _TripsScreenState extends State<TripsScreen> {
       destination: 'Tokyo',
       startDateTime: DateTime(2025, 7, 29),
       endDateTime: DateTime(2025, 8, 13),
-    )
+    ),
   ];
-  
+
   final _uuid = const Uuid();
 
   void _showTripSheet({Trip? trip, int? index}) {
@@ -53,41 +53,44 @@ class _TripsScreenState extends State<TripsScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.8,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        builder: (_, scrollController) {
-          return SingleChildScrollView(
-            controller: scrollController,
-            child: TripFormSheet(
-              initialName: trip?.destination,
-              initialStartDate: trip?.startDateTime,
-              initialEndDate: trip?.endDateTime,
-            ),
-          );
-        },
-      ),
-    ).then((result) {
-      if (result != null && result['name'] != null && result['name'].isNotEmpty) {
-        setState(() {
-          final Trip updatedTrip = Trip(
-            id: trip?.id ?? _uuid.v4(),
-            destination: result['name'],
-            startDateTime: result['startDate'],
-            endDateTime: result['endDate'],
-            places: trip?.places ?? [],
-          );
-
-          if (index != null) {
-            // Update existing trip
-            _trips[index] = updatedTrip;
-          } else {
-            // Add new trip
-            _trips.add(updatedTrip);
-          }
-        });
+      builder:
+          (context) => DraggableScrollableSheet(
+            initialChildSize: 0.8,
+            minChildSize: 0.5,
+            maxChildSize: 0.95,
+            builder: (_, scrollController) {
+              return SingleChildScrollView(
+                controller: scrollController,
+                child: TripFormSheet(
+                  id: trip?.id,
+                  initialName: trip?.destination,
+                  initialStartDate: trip?.startDateTime,
+                  initialEndDate: trip?.endDateTime,
+                ),
+              );
+            },
+          ),
+    ).then((dynamic result) {
+      if (result == null || result is! Trip) {
+        return;
       }
+      setState(() {
+        final Trip updatedTrip = Trip(
+          id: trip?.id ?? _uuid.v4(),
+          destination: result.destination,
+          startDateTime: result.startDateTime,
+          endDateTime: result.endDateTime,
+          places: trip?.places ?? [],
+        );
+
+        if (index != null) {
+          // Update existing trip
+          _trips[index] = updatedTrip;
+        } else {
+          // Add new trip
+          _trips.add(updatedTrip);
+        }
+      });
     });
   }
 
@@ -108,10 +111,7 @@ class _TripsScreenState extends State<TripsScreen> {
         centerTitle: true,
         title: const Text(
           'Trips',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
-          ),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
         ),
         leading: IconButton(
           icon: const Icon(Icons.menu),
@@ -123,10 +123,7 @@ class _TripsScreenState extends State<TripsScreen> {
           IconButton(
             icon: const CircleAvatar(
               backgroundColor: Colors.black12,
-              child: Icon(
-                Icons.person_outline,
-                color: Colors.black54,
-              ),
+              child: Icon(Icons.person_outline, color: Colors.black54),
             ),
             onPressed: () {
               // Open profile
@@ -149,10 +146,11 @@ class _TripsScreenState extends State<TripsScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => PlacesOfInterestScreen(
-                        tripName: trip.destination,
-                        initialPlaces: trip.places,
-                      ),
+                      builder:
+                          (context) => PlacesOfInterestScreen(
+                            tripName: trip.destination,
+                            initialPlaces: trip.places,
+                          ),
                     ),
                   ).then((updatedPlaces) {
                     if (updatedPlaces != null) {
@@ -183,12 +181,7 @@ class TripCard extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onEdit;
 
-  const TripCard({
-    super.key,
-    required this.trip,
-    this.onTap,
-    this.onEdit,
-  });
+  const TripCard({super.key, required this.trip, this.onTap, this.onEdit});
 
   @override
   Widget build(BuildContext context) {
@@ -199,9 +192,7 @@ class TripCard extends StatelessWidget {
       onTap: onTap,
       child: Card(
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: Colors.white,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
@@ -235,8 +226,8 @@ class TripCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      trip.startDateTime == null || trip.endDateTime == null 
-                          ? 'No Start/End' 
+                      trip.startDateTime == null || trip.endDateTime == null
+                          ? 'No Start/End'
                           : '${formatDate(trip.startDateTime!)} - ${formatDate(trip.endDateTime!)}',
                       style: const TextStyle(
                         fontSize: 14,

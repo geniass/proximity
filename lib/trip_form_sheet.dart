@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:proximity/date_utils.dart';
 import 'package:proximity/models/place_of_interest.dart';
+import 'package:proximity/models/trip.dart';
 import 'package:proximity/places_of_interest_screen.dart';
+import 'package:uuid/uuid.dart';
 
 class TripFormSheet extends StatefulWidget {
+  final String? id;
   final String? initialName;
   final DateTime? initialStartDate;
   final DateTime? initialEndDate;
@@ -11,6 +14,7 @@ class TripFormSheet extends StatefulWidget {
 
   const TripFormSheet({
     super.key,
+    this.id,
     this.initialName,
     this.initialStartDate,
     this.initialEndDate,
@@ -130,13 +134,13 @@ class _TripFormSheetState extends State<TripFormSheet> {
               IconButton(
                 icon: const Icon(Icons.check),
                 onPressed: () {
-                  // Save the trip and close the sheet
-                  final result = {
-                    'name': _nameController.text,
-                    'startDate': _noStartEndDate ? null : _selectedStartDate,
-                    'endDate': _noStartEndDate ? null : _selectedEndDate,
-                    'places': _places,
-                  };
+                  final result = Trip(
+                    id: widget.id != null && widget.id!.isNotEmpty ? widget.id! : Uuid().v4().toString(),
+                    destination: _nameController.text,
+                    startDateTime: _noStartEndDate ? null : _selectedStartDate,
+                    endDateTime: _noStartEndDate ? null : _selectedEndDate,
+                    places: _places,
+                  );
                   Navigator.pop(context, result);
                 },
               ),
