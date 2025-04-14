@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:proximity/models/place_of_interest.dart';
+import 'package:proximity/ui/trips_list/trips_list_viewmodel.dart';
 import 'package:uuid/uuid.dart';
 
 class PlacesOfInterestScreen extends StatefulWidget {
   final String tripName;
+  final String tripId;
   final List<PlaceOfInterest>? initialPlaces;
 
   const PlacesOfInterestScreen({
     super.key,
     required this.tripName,
+    required this.tripId,
     this.initialPlaces,
   });
 
@@ -23,13 +27,17 @@ class _PlacesOfInterestScreenState extends State<PlacesOfInterestScreen> {
   @override
   void initState() {
     super.initState();
-    _places = widget.initialPlaces ?? [];
+    _places = widget.initialPlaces?.toList() ?? [];
   }
 
   void _toggleIgnored(int index, bool value) {
     setState(() {
       _places[index] = _places[index].copyWith(isIgnored: value);
     });
+    
+    // Update the places in the view model
+    final viewModel = Provider.of<TripsListViewModel>(context, listen: false);
+    viewModel.updateTripPlaces(widget.tripId, _places);
   }
 
   void _addNewPlace() {
@@ -60,6 +68,11 @@ class _PlacesOfInterestScreenState extends State<PlacesOfInterestScreen> {
                     name: controller.text,
                   ));
                 });
+                
+                // Update the places in the view model
+                final viewModel = Provider.of<TripsListViewModel>(context, listen: false);
+                viewModel.updateTripPlaces(widget.tripId, _places);
+                
                 Navigator.pop(context);
               }
             },
@@ -78,7 +91,7 @@ class _PlacesOfInterestScreenState extends State<PlacesOfInterestScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context, _places),
+          onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           widget.tripName,

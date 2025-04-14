@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:proximity/date_utils.dart';
+import 'package:proximity/ui/core/date_utils.dart';
 import 'package:proximity/models/place_of_interest.dart';
 import 'package:proximity/models/trip.dart';
-import 'package:proximity/places_of_interest_screen.dart';
 import 'package:uuid/uuid.dart';
 
 class TripFormSheet extends StatefulWidget {
@@ -38,6 +37,8 @@ class _TripFormSheetState extends State<TripFormSheet> {
     _nameController = TextEditingController(text: widget.initialName);
     _selectedStartDate = widget.initialStartDate;
     _selectedEndDate = widget.initialEndDate;
+    _noStartEndDate = widget.initialStartDate == null &&
+        widget.initialEndDate == null;
     _places = widget.initialPlaces ?? [];
   }
 
@@ -59,7 +60,8 @@ class _TripFormSheetState extends State<TripFormSheet> {
       setState(() {
         _selectedStartDate = pickedDate;
         // If end date is before the new start date or not set, update it
-        if (_selectedEndDate == null || _selectedEndDate!.isBefore(pickedDate)) {
+        if (_selectedEndDate == null ||
+            _selectedEndDate!.isBefore(pickedDate)) {
           _selectedEndDate = pickedDate;
         }
       });
@@ -77,24 +79,6 @@ class _TripFormSheetState extends State<TripFormSheet> {
     if (pickedDate != null) {
       setState(() {
         _selectedEndDate = pickedDate;
-      });
-    }
-  }
-
-  void _navigateToPlacesOfInterest() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PlacesOfInterestScreen(
-          tripName: _nameController.text.isEmpty ? 'Trip' : _nameController.text,
-          initialPlaces: _places,
-        ),
-      ),
-    );
-
-    if (result != null) {
-      setState(() {
-        _places = result;
       });
     }
   }
@@ -122,7 +106,7 @@ class _TripFormSheetState extends State<TripFormSheet> {
               margin: const EdgeInsets.only(bottom: 20),
             ),
           ),
-          
+
           // Header with close and save buttons
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -135,7 +119,10 @@ class _TripFormSheetState extends State<TripFormSheet> {
                 icon: const Icon(Icons.check),
                 onPressed: () {
                   final result = Trip(
-                    id: widget.id != null && widget.id!.isNotEmpty ? widget.id! : Uuid().v4().toString(),
+                    id:
+                        widget.id != null && widget.id!.isNotEmpty
+                            ? widget.id!
+                            : Uuid().v4().toString(),
                     destination: _nameController.text,
                     startDateTime: _noStartEndDate ? null : _selectedStartDate,
                     endDateTime: _noStartEndDate ? null : _selectedEndDate,
@@ -146,9 +133,9 @@ class _TripFormSheetState extends State<TripFormSheet> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Name field
           TextField(
             controller: _nameController,
@@ -166,20 +153,16 @@ class _TripFormSheetState extends State<TripFormSheet> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 20),
-          
-          
+
           // No Start/End Date toggle
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
                 'No Start/End Date',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
               Switch(
                 value: _noStartEndDate,
@@ -193,9 +176,9 @@ class _TripFormSheetState extends State<TripFormSheet> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 10),
-          
+
           // Date selection containers
           if (!_noStartEndDate)
             Column(
@@ -205,7 +188,10 @@ class _TripFormSheetState extends State<TripFormSheet> {
                   onTap: _showStartDatePicker,
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 16,
+                    ),
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.purple, width: 1),
                       borderRadius: BorderRadius.circular(8),
@@ -224,7 +210,7 @@ class _TripFormSheetState extends State<TripFormSheet> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          _selectedStartDate != null 
+                          _selectedStartDate != null
                               ? formatDate(_selectedStartDate!)
                               : 'Select a date',
                           style: TextStyle(
@@ -236,15 +222,18 @@ class _TripFormSheetState extends State<TripFormSheet> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 10),
-                
+
                 // End date field
                 GestureDetector(
                   onTap: _showEndDatePicker,
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 16,
+                    ),
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.purple, width: 1),
                       borderRadius: BorderRadius.circular(8),
@@ -263,7 +252,7 @@ class _TripFormSheetState extends State<TripFormSheet> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          _selectedEndDate != null 
+                          _selectedEndDate != null
                               ? formatDate(_selectedEndDate!)
                               : 'Select a date',
                           style: TextStyle(
@@ -277,56 +266,7 @@ class _TripFormSheetState extends State<TripFormSheet> {
                 ),
               ],
             ),
-          
-          const SizedBox(height: 20),
-    
-          // Places of Interest Button
-          InkWell(
-            onTap: _navigateToPlacesOfInterest,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.blueGrey, width: 1),
-                borderRadius: BorderRadius.circular(8),
-                color: Colors.blueGrey.withAlpha(10),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Places of Interest',
-                        style: TextStyle(
-                          color: Colors.blueGrey,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _places.isEmpty 
-                            ? 'Add places to visit' 
-                            : '${_places.length} places added',
-                        style: const TextStyle(
-                          color: Colors.blueGrey,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Icon(
-                    Icons.arrow_forward_ios,
-                    color: Colors.blueGrey,
-                    size: 16,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          
+
           const SizedBox(height: 300), // Extra space for the sheet
         ],
       ),
