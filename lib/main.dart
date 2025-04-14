@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:proximity/date_utils.dart';
+import 'package:proximity/models/trip.dart';
 import 'package:proximity/places_of_interest_screen.dart';
+import 'package:uuid/uuid.dart';
 import 'trip_form_sheet.dart';
 
 void main() {
@@ -35,18 +37,18 @@ class TripsScreen extends StatefulWidget {
 
 class _TripsScreenState extends State<TripsScreen> {
   // List of trips that will be displayed
-  final List<Map<String, dynamic>> _trips = [
-    {
-      'destination': 'Tokyo',
-      'startDate': '29 July',
-      'endDate': '13 August',
-      'avatarLetter': 'T',
-      'startDateTime': DateTime(2025, 7, 29),
-      'endDateTime': DateTime(2025, 8, 13),
-    }
+  final List<Trip> _trips = [
+    Trip(
+      id: 'trip-1',
+      destination: 'Tokyo',
+      startDateTime: DateTime(2025, 7, 29),
+      endDateTime: DateTime(2025, 8, 13),
+    )
   ];
+  
+  final _uuid = const Uuid();
 
-  void _showTripSheet({Map<String, dynamic>? tripData, int? index}) {
+  void _showTripSheet({Trip? trip, int? index}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -59,9 +61,9 @@ class _TripsScreenState extends State<TripsScreen> {
           return SingleChildScrollView(
             controller: scrollController,
             child: TripFormSheet(
-              initialName: tripData?['destination'],
-              initialStartDate: tripData?['startDateTime'],
-              initialEndDate: tripData?['endDateTime'],
+              initialName: trip?.destination,
+              initialStartDate: trip?.startDateTime,
+              initialEndDate: trip?.endDateTime,
             ),
           );
         },
@@ -69,18 +71,13 @@ class _TripsScreenState extends State<TripsScreen> {
     ).then((result) {
       if (result != null && result['name'] != null && result['name'].isNotEmpty) {
         setState(() {
-          final Map<String, dynamic> updatedTrip = {
-            'destination': result['name'],
-            'startDate': result['startDate'] != null
-                ? '${result['startDate'].day} ${_getMonthName(result['startDate'].month)}'
-                : 'No date',
-            'endDate': result['endDate'] != null
-                ? '${result['endDate'].day} ${_getMonthName(result['endDate'].month)}'
-                : '',
-            'avatarLetter': result['name'][0].toUpperCase(),
-            'startDateTime': result['startDate'],
-            'endDateTime': result['endDate'],
-          };
+          final Trip updatedTrip = Trip(
+            id: trip?.id ?? _uuid.v4(),
+            destination: result['name'],
+            startDateTime: result['startDate'],
+            endDateTime: result['endDate'],
+            places: trip?.places ?? [],
+          );
 
           if (index != null) {
             // Update existing trip
@@ -99,25 +96,7 @@ class _TripsScreenState extends State<TripsScreen> {
   }
 
   void _showEditTripSheet(int index) {
-    _showTripSheet(tripData: _trips[index], index: index);
-  }
-
-  String _getMonthName(int month) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
-    ];
-    return months[month - 1];
+    _showTripSheet(trip: _trips[index], index: index);
   }
 
   @override
@@ -164,24 +143,21 @@ class _TripsScreenState extends State<TripsScreen> {
             return Padding(
               padding: const EdgeInsets.only(bottom: 16.0),
               child: TripCard(
-                destination: trip['destination'],
-                avatarLetter: trip['avatarLetter'],
-                startDateTime: trip['startDateTime'],
-                endDateTime: trip['endDateTime'],
+                trip: trip,
                 onTap: () {
                   // Navigate to the places of interest screen when tapping on a trip
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => PlacesOfInterestScreen(
-                        tripName: trip['destination'],
-                        initialPlaces: trip['places'] ?? [],
+                        tripName: trip.destination,
+                        initialPlaces: trip.places,
                       ),
                     ),
                   ).then((updatedPlaces) {
                     if (updatedPlaces != null) {
                       setState(() {
-                        trip['places'] = updatedPlaces;
+                        _trips[index] = trip.copyWith(places: updatedPlaces);
                       });
                     }
                   });
@@ -203,57 +179,21 @@ class _TripsScreenState extends State<TripsScreen> {
 }
 
 class TripCard extends StatelessWidget {
-  final String destination;
-  final String avatarLetter;
-  final DateTime? startDateTime;
-  final DateTime? endDateTime;
+  final Trip trip;
   final VoidCallback? onTap;
   final VoidCallback? onEdit;
 
   const TripCard({
     super.key,
-    required this.destination,
-    required this.avatarLetter,
-    this.startDateTime,
-    this.endDateTime,
+    required this.trip,
     this.onTap,
     this.onEdit,
   });
 
-  double calculateProgress() {
-    // Today's date
-    final today = DateTime.now();
-
-    // If no dates are set, return 0
-    if (startDateTime == null || endDateTime == null) {
-      return 0.0;
-    }
-
-    // If the trip hasn't started yet
-    if (today.isBefore(startDateTime!)) {
-      return 0.0;
-    }
-
-    // If the trip is already over
-    if (today.isAfter(endDateTime!)) {
-      return 1.0;
-    }
-
-    // Calculate the total trip duration in days
-    final totalDuration = endDateTime!.difference(startDateTime!).inDays;
-    if (totalDuration <= 0) return 0.0;
-
-    // Calculate days elapsed since start
-    final elapsedDuration = today.difference(startDateTime!).inDays;
-
-    // Calculate and return progress as a value between 0.0 and 1.0
-    return elapsedDuration / totalDuration;
-  }
-
   @override
   Widget build(BuildContext context) {
     // Calculate trip progress
-    final progress = calculateProgress();
+    final progress = trip.calculateProgress();
 
     return GestureDetector(
       onTap: onTap,
@@ -272,7 +212,7 @@ class TripCard extends StatelessWidget {
                 radius: 25,
                 backgroundColor: Colors.blue.shade100,
                 child: Text(
-                  avatarLetter,
+                  trip.avatarLetter,
                   style: TextStyle(
                     fontSize: 24,
                     color: Colors.indigo.shade700,
@@ -287,7 +227,7 @@ class TripCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      destination,
+                      trip.destination,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -295,7 +235,9 @@ class TripCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      startDateTime == null || endDateTime == null ? 'No Start/End' : '${formatDate(startDateTime!)} - ${formatDate(endDateTime!)}' ,
+                      trip.startDateTime == null || trip.endDateTime == null 
+                          ? 'No Start/End' 
+                          : '${formatDate(trip.startDateTime!)} - ${formatDate(trip.endDateTime!)}',
                       style: const TextStyle(
                         fontSize: 14,
                         color: Colors.black54,
