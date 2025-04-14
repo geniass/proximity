@@ -1,6 +1,8 @@
 # proximity
 
-A new Flutter project.
+Be reminded of Nearby places you would like to visit.
+
+In a foreign city you might have been only a couple of blocks away from a place on your itinierary, and only realised hours later. Nearby solves this by loading places of interest from a custom Google Map and notifying you when you when you are close.
 
 ## Getting Started
 
