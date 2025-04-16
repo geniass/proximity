@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:proximity/models/trip.dart';
-import 'package:proximity/ui/trip/places_of_interest_screen.dart';
 import 'package:proximity/ui/trips_list/trip_card.dart';
 import 'package:proximity/ui/trips_list/trips_list_viewmodel.dart';
 import 'trip_form_sheet.dart';
@@ -142,18 +142,8 @@ class TripsScreen extends StatelessWidget {
                   child: TripCard(
                     trip: trip,
                     onTap: () {
-                      // Navigate to the places of interest screen when tapping on a trip
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => PlacesOfInterestScreen(
-                                tripName: trip.destination,
-                                tripId: trip.id,
-                                initialPlaces: trip.places,
-                              ),
-                        ),
-                      );
+                      // Navigate using Go Router instead of Navigator
+                      context.go('/trip/${trip.id}');
                     },
                     onEdit: () => _showEditTripSheet(context, index),
                   ),

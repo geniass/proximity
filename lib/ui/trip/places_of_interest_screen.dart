@@ -4,16 +4,14 @@ import 'package:proximity/models/place_of_interest.dart';
 import 'package:proximity/ui/trips_list/trips_list_viewmodel.dart';
 import 'package:uuid/uuid.dart';
 
+enum PlacesViewType { map, list }
+
 class PlacesOfInterestScreen extends StatefulWidget {
-  final String tripName;
   final String tripId;
-  final List<PlaceOfInterest>? initialPlaces;
 
   const PlacesOfInterestScreen({
     super.key,
-    required this.tripName,
     required this.tripId,
-    this.initialPlaces,
   });
 
   @override
@@ -27,7 +25,6 @@ class _PlacesOfInterestScreenState extends State<PlacesOfInterestScreen> {
   @override
   void initState() {
     super.initState();
-    _places = widget.initialPlaces?.toList() ?? [];
   }
 
   void _toggleIgnored(int index, bool value) {
@@ -94,7 +91,7 @@ class _PlacesOfInterestScreenState extends State<PlacesOfInterestScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          widget.tripName,
+          "KADJFBAKDFJADKFJND", // TODO
           style: const TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
