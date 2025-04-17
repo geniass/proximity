@@ -6,6 +6,7 @@ abstract class TripRepository {
   Future<Trip?> getTripById(String id);
   Future<void> addTrip(Trip trip);
   Future<void> updateTrip(Trip trip);
+  Future<void> addTripPlace(String tripId, PlaceOfInterest place);
   Future<void> updateTripPlaces(String tripId, List<PlaceOfInterest> places);
   Future<void> deleteTrip(String id);
 }

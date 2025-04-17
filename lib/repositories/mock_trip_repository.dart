@@ -13,14 +13,14 @@ class MockTripRepository implements TripRepository {
       endDateTime: DateTime(2025, 8, 13),
     ),
   ];
-  
+
   @override
   Future<List<Trip>> getTrips() async {
     // Simulate network delay
     await Future.delayed(const Duration(milliseconds: 300));
     return _trips.toList();
   }
-  
+
   @override
   Future<Trip?> getTripById(String id) async {
     await Future.delayed(const Duration(milliseconds: 300));
@@ -30,7 +30,7 @@ class MockTripRepository implements TripRepository {
       return null;
     }
   }
-  
+
   @override
   Future<void> addTrip(Trip trip) async {
     await Future.delayed(const Duration(milliseconds: 500));
@@ -43,7 +43,7 @@ class MockTripRepository implements TripRepository {
     );
     _trips.add(newTrip);
   }
-  
+
   @override
   Future<void> updateTrip(Trip trip) async {
     await Future.delayed(const Duration(milliseconds: 500));
@@ -52,16 +52,34 @@ class MockTripRepository implements TripRepository {
       _trips[index] = trip;
     }
   }
-  
+
   @override
-  Future<void> updateTripPlaces(String tripId, List<PlaceOfInterest> places) async {
+  Future<void> addTripPlace(String tripId, PlaceOfInterest place) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    final index = _trips.indexWhere((t) => t.id == tripId);
+    if (index >= 0) {
+      final trip = _trips[index];
+      // Check if the place already exists in the trip
+      if (trip.places.any((p) => p.googlePlaceId == place.googlePlaceId)) {
+        return;
+      }
+      final updatedPlaces = List<PlaceOfInterest>.from(trip.places)..add(place);
+      _trips[index] = trip.copyWith(places: updatedPlaces);
+    }
+  }
+
+  @override
+  Future<void> updateTripPlaces(
+    String tripId,
+    List<PlaceOfInterest> places,
+  ) async {
     await Future.delayed(const Duration(milliseconds: 300));
     final index = _trips.indexWhere((t) => t.id == tripId);
     if (index >= 0) {
       _trips[index] = _trips[index].copyWith(places: places);
     }
   }
-  
+
   @override
   Future<void> deleteTrip(String id) async {
     await Future.delayed(const Duration(milliseconds: 300));
