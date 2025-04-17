@@ -1,18 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:proximity/models/place_of_interest.dart';
-import 'package:proximity/ui/trips_list/trips_list_viewmodel.dart';
-import 'package:uuid/uuid.dart';
-
-enum PlacesViewType { map, list }
+import 'package:proximity/ui/trip/places_of_interest_viewmodel.dart';
 
 class PlacesOfInterestScreen extends StatefulWidget {
-  final String tripId;
+  final PlacesOfInterestViewModel viewModel;
 
-  const PlacesOfInterestScreen({
-    super.key,
-    required this.tripId,
-  });
+  const PlacesOfInterestScreen({super.key, required this.viewModel});
 
   @override
   State<PlacesOfInterestScreen> createState() => _PlacesOfInterestScreenState();
