@@ -60,7 +60,11 @@ class TripsScreen extends StatelessWidget {
   }
 
   void _showEditTripSheet(BuildContext context, int index) {
-    _showTripSheet(context: context, trip: viewModel.trips[index], index: index);
+    _showTripSheet(
+      context: context,
+      trip: viewModel.trips[index],
+      index: index,
+    );
   }
 
   @override
@@ -74,23 +78,23 @@ class TripsScreen extends StatelessWidget {
           'Trips',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () {
-            // Open drawer
-          },
-        ),
-        actions: [
-          IconButton(
-            icon: const CircleAvatar(
-              backgroundColor: Colors.black12,
-              child: Icon(Icons.person_outline, color: Colors.black54),
-            ),
-            onPressed: () {
-              // Open profile
-            },
-          ),
-        ],
+        // leading: IconButton(
+        //   icon: const Icon(Icons.menu),
+        //   onPressed: () {
+        //     // Open drawer
+        //   },
+        // ),
+        // actions: [
+        //   IconButton(
+        //     icon: const CircleAvatar(
+        //       backgroundColor: Colors.black12,
+        //       child: Icon(Icons.person_outline, color: Colors.black54),
+        //     ),
+        //     onPressed: () {
+        //       // Open profile
+        //     },
+        //   ),
+        // ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -98,11 +102,9 @@ class TripsScreen extends StatelessWidget {
           listenable: viewModel,
           builder: (context, child) {
             if (viewModel.isLoading) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
+              return const Center(child: CircularProgressIndicator());
             }
-            
+
             if (viewModel.error.isNotEmpty) {
               return Center(
                 child: Column(
@@ -132,7 +134,7 @@ class TripsScreen extends StatelessWidget {
                 ),
               );
             }
-            
+
             return ListView.builder(
               itemCount: viewModel.trips.length,
               itemBuilder: (context, index) {
@@ -142,7 +144,6 @@ class TripsScreen extends StatelessWidget {
                   child: TripCard(
                     trip: trip,
                     onTap: () {
-                      // Navigate using Go Router instead of Navigator
                       context.go('/trip/${trip.id}');
                     },
                     onEdit: () => _showEditTripSheet(context, index),
