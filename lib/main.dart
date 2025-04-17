@@ -14,7 +14,7 @@ void main() {
 // Define route names as constants for type safety
 class AppRoutes {
   static const String trips = '/';
-  static const String places = '/trip/:tripId';
+  static const String places = 'trip/:tripId';
   
   static String placesRoute(String tripId) => '/trip/$tripId';
 }
@@ -26,30 +26,28 @@ class ProximityApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // Provide the repository first
         Provider<TripRepository>(create: (context) => MockTripRepository()),
       ],
       builder: (context, child) {
-        // Configure GoRouter
         final GoRouter router = GoRouter(
           initialLocation: AppRoutes.trips,
           routes: [
         GoRoute(
           path: AppRoutes.trips,
           builder: (context, state) {
-            var viewModel = TripsListViewModel(context.read());
+                final viewModel = TripsListViewModel(context.read());
             viewModel.load();
             return TripsScreen(viewModel: viewModel);
           },
-        ),
+              routes: [
             GoRoute(
               path: AppRoutes.places,
               builder: (context, state) {
                 final tripId = state.pathParameters['tripId']!;
-                return PlacesOfInterestScreen(
-                  tripId: tripId,
-                );
+                    return PlacesOfInterestScreen(tripId: tripId);
               },
+                ),
+              ],
             ),
           ],
         );
