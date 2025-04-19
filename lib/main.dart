@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:proximity/repositories/mock_trip_repository.dart';
+import 'package:proximity/repositories/sqlite_trip_repository.dart';
 import 'package:proximity/repositories/trip_repository.dart';
+import 'package:proximity/services/database_service.dart';
 import 'package:proximity/services/places_service.dart';
 import 'package:proximity/ui/search/place_search_screen.dart';
 import 'package:proximity/ui/search/place_search_viewmodel.dart';
@@ -31,8 +32,17 @@ class ProximityApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider<TripRepository>(create: (context) => MockTripRepository()),
-        Provider<PlacesService>(create: (context) => PlacesService()),
+        Provider<DatabaseService>(
+          create: (_) => DatabaseService(),
+          dispose: (_, service) => service.close(),
+        ),
+
+        ProxyProvider<DatabaseService, TripRepository>(
+          update:
+              (_, databaseService, __) => SqliteTripRepository(databaseService),
+        ),
+
+        Provider<PlacesService>(create: (_) => PlacesService()),
       ],
       builder: (context, child) {
         final GoRouter router = GoRouter(
