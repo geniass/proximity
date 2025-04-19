@@ -1,6 +1,5 @@
-import 'dart:convert';
 import 'dart:developer';
-import 'package:http/http.dart' as http;
+import 'package:flutter_google_places_sdk/flutter_google_places_sdk.dart';
 import 'package:proximity/models/place_of_interest.dart';
 import 'package:uuid/uuid.dart';
 
@@ -8,7 +7,25 @@ class PlacesService {
   // This API key has to be in the client code but its restricted to this app's fingerprint.
   // nosemgrep: generic.secrets.security.detected-generic-api-key.detected-generic-api-key
   static const String _apiKey = 'AIzaSyCcQKL7nw7OJCc3fKPi9EIEIgkedaebWWQ';
-  static const String _baseUrl = 'https://maps.googleapis.com/maps/api/place';
+
+  final FlutterGooglePlacesSdkPlatform _placesClient =
+      FlutterGooglePlacesSdkPlatform.instance;
+  Future<void>? _initialization;
+
+  PlacesService() {
+    // HACK use platform interface directly because the lib doesn't support searchByText yet
+    // _placesClient = FlutterGooglePlacesSdk(_apiKey, useNewApi: true);
+  }
+
+  Future<void> _ensureInitialized() {
+    return _initialization ??= _placesClient.initialize(
+      _apiKey,
+      useNewApi: true,
+    )..catchError((dynamic err) {
+      print('FlutterGooglePlacesSdk::_ensureInitialized error: $err');
+      _initialization = null;
+    });
+  }
 
   // Search for places based on a text query
   Future<List<PlaceSearchResult>> searchPlaces(String query) async {
@@ -16,49 +33,62 @@ class PlacesService {
       return [];
     }
 
-    final url = Uri.parse(
-      '$_baseUrl/textsearch/json?query=$query&key=$_apiKey',
-    );
+    try {
+      await _ensureInitialized();
+      final response = await _placesClient.searchByText(
+        query,
+        fields: [PlaceField.Id, PlaceField.Name, PlaceField.Location],
+      );
 
-    final response = await http.get(url);
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      if (data['status'] == 'OK') {
-        return (data['results'] as List)
-            .map((place) => PlaceSearchResult.fromJson(place))
-            .toList();
-      }
+      return response.places
+          .map(
+            (prediction) => PlaceSearchResult(
+              placeId: prediction.id!,
+              name: prediction.name!,
+              lat: prediction.latLng?.lat ?? 0.0,
+              lng: prediction.latLng?.lng ?? 0.0,
+            ),
+          )
+          .toList();
+    } catch (e) {
+      log('Error searching places: $e');
+      return [];
     }
-
-    return [];
   }
 
   // Get details for a specific place by place ID
   Future<PlaceDetails?> getPlaceDetails(String placeId) async {
-    final url = Uri.parse(
-      '$_baseUrl/details/json?place_id=$placeId&fields=place_id,name,formatted_address,geometry,photos&key=$_apiKey',
-    );
-
-    final response = await http.get(url);
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      if (data['status'] == 'OK') {
-        return PlaceDetails.fromJson(data['result']);
-      } else {
-        // TODO better logging
-        log(
-          'Invalid place details status (${data['status']}): ${data['error_message']}',
-        );
-      }
-    } else {
-      // TODO better logging
-      log(
-        'Error fetching place details (${response.statusCode}): ${response.body}',
+    try {
+      final response = await _placesClient.fetchPlace(
+        placeId,
+        fields: [
+          PlaceField.Id,
+          PlaceField.Name,
+          PlaceField.Address,
+          PlaceField.Location,
+          PlaceField.PhotoMetadatas,
+        ],
       );
-    }
 
-    return null;
+      final place = response.place;
+      String? photoReference;
+
+      if (place?.photoMetadatas != null && place!.photoMetadatas!.isNotEmpty) {
+        photoReference = place.photoMetadatas![0].photoReference;
+      }
+
+      return PlaceDetails(
+        placeId: place?.id ?? placeId,
+        name: place?.name ?? '',
+        address: place?.address ?? '',
+        lat: place?.latLng?.lat ?? 0.0,
+        lng: place?.latLng?.lng ?? 0.0,
+        photoReference: photoReference,
+      );
+    } catch (e) {
+      log('Error fetching place details: $e');
+      return null;
+    }
   }
 
   // Convert a PlaceDetails to a PlaceOfInterest model
@@ -87,15 +117,6 @@ class PlaceSearchResult {
     required this.lat,
     required this.lng,
   });
-
-  factory PlaceSearchResult.fromJson(Map<String, dynamic> json) {
-    return PlaceSearchResult(
-      placeId: json['place_id'],
-      name: json['name'],
-      lat: json['geometry']['location']['lat'],
-      lng: json['geometry']['location']['lng'],
-    );
-  }
 }
 
 class PlaceDetails {
@@ -114,20 +135,4 @@ class PlaceDetails {
     required this.lng,
     this.photoReference,
   });
-
-  factory PlaceDetails.fromJson(Map<String, dynamic> json) {
-    String? photoRef;
-    if (json['photos'] != null && (json['photos'] as List).isNotEmpty) {
-      photoRef = json['photos'][0]['photo_reference'];
-    }
-
-    return PlaceDetails(
-      placeId: json['place_id'],
-      name: json['name'],
-      address: json['formatted_address'],
-      lat: json['geometry']['location']['lat'],
-      lng: json['geometry']['location']['lng'],
-      photoReference: photoRef,
-    );
-  }
 }
