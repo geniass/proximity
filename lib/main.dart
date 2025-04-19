@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 import 'package:proximity/repositories/sqlite_trip_repository.dart';
 import 'package:proximity/repositories/trip_repository.dart';
@@ -13,6 +14,12 @@ import 'package:proximity/ui/trips_list/trips_list_screen.dart';
 import 'package:proximity/ui/trips_list/trips_list_viewmodel.dart';
 
 void main() {
+  Logger.root.level = Level.ALL;
+  Logger.root.onRecord.listen((record) {
+    print(
+      '${record.level.name}: ${record.time}: [${record.loggerName}] ${record.message}',
+    );
+  });
   runApp(const ProximityApp());
 }
 
