@@ -6,7 +6,7 @@ class Trip {
   final DateTime? startDateTime;
   final DateTime? endDateTime;
   final List<PlaceOfInterest> places;
-  
+
   Trip({
     required this.id,
     required this.destination,
@@ -14,9 +14,10 @@ class Trip {
     this.endDateTime,
     List<PlaceOfInterest>? places,
   }) : places = places ?? [];
-  
-  String get avatarLetter => destination.isNotEmpty ? destination[0].toUpperCase() : '';
-  
+
+  String get avatarLetter =>
+      destination.isNotEmpty ? destination[0].toUpperCase() : '';
+
   Trip copyWith({
     String? id,
     String? destination,
@@ -29,7 +30,8 @@ class Trip {
     return Trip(
       id: id ?? this.id,
       destination: destination ?? this.destination,
-      startDateTime: clearStartDate ? null : startDateTime ?? this.startDateTime,
+      startDateTime:
+          clearStartDate ? null : startDateTime ?? this.startDateTime,
       endDateTime: clearEndDate ? null : endDateTime ?? this.endDateTime,
       places: places ?? this.places,
     );
@@ -64,5 +66,30 @@ class Trip {
 
     // Calculate and return progress as a value between 0.0 and 1.0
     return elapsedDuration / totalDuration;
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'destination': destination,
+      'start_date': startDateTime?.millisecondsSinceEpoch,
+      'end_date': endDateTime?.millisecondsSinceEpoch,
+    };
+  }
+
+  static Trip fromMap(Map<String, dynamic> map, List<PlaceOfInterest> places) {
+    return Trip(
+      id: map['id'],
+      destination: map['destination'],
+      startDateTime:
+          map['start_date'] != null
+              ? DateTime.fromMillisecondsSinceEpoch(map['start_date'])
+              : null,
+      endDateTime:
+          map['end_date'] != null
+              ? DateTime.fromMillisecondsSinceEpoch(map['end_date'])
+              : null,
+      places: places,
+    );
   }
 }

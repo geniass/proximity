@@ -36,4 +36,29 @@ class PlaceOfInterest {
       longitude: longitude ?? this.longitude,
     );
   }
+
+  Map<String, dynamic> toMap({required String tripId}) {
+    return {
+      'id': id,
+      'trip_id': tripId,
+      'google_place_id': googlePlaceId,
+      'name': name,
+      'is_ignored': isIgnored ? 1 : 0,
+      'notes': notes,
+      'latitude': latitude,
+      'longitude': longitude,
+    };
+  }
+
+  static PlaceOfInterest fromMap(Map<String, dynamic> map) {
+    return PlaceOfInterest(
+      id: map['id'],
+      googlePlaceId: map['google_place_id'],
+      name: map['name'],
+      isIgnored: map['is_ignored'] == 1,
+      notes: map['notes'],
+      latitude: map['latitude'],
+      longitude: map['longitude'],
+    );
+  }
 }
